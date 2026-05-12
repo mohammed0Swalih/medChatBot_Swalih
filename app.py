@@ -59,6 +59,18 @@ async def start():
     
     #await cl.Message(content="Hi! I am your Medical Assistant. Ask me anything!").send()
 
+@cl.action_callback("thumbs_up")
+async def on_thumbs_up(action: cl.Action):
+    await cl.Message(content="Thanks for the feedback! 👍").send()
+    # log it
+    with open("feedback_log.txt", "a") as f:
+        f.write(f"LIKED: {action.value}\n")
+
+@cl.action_callback("thumbs_down")
+async def on_thumbs_down(action: cl.Action):
+    await cl.Message(content="Thanks for the feedback!, We will improve.").send()
+    with open("feedback_log.txt", "a") as f:
+        f.write(f"DISLIKED: {action.value}\n")
 
 @cl.on_message
 async def main(message: cl.Message):
