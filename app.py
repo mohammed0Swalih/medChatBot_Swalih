@@ -34,7 +34,7 @@ async def start():
     retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
     
     chatModel = ChatOpenAI(
-        model="mistralai/mistral-7b-instruct:free",
+        model="inclusionai/ring-2.6-1t:free",
         temperature=0.7,
         openai_api_key=OPENROUTER_API_KEY,
         openai_api_base="https://openrouter.ai/api/v1"
@@ -57,11 +57,15 @@ async def start():
     
     cl.user_session.set("rag_chain", rag_chain)
     
-    await cl.Message(content="Hi! I am your Medical Assistant. Ask me anything!").send()
+    #await cl.Message(content="Hi! I am your Medical Assistant. Ask me anything!").send()
 
 
 @cl.on_message
 async def main(message: cl.Message):
+    async def main(message: cl.Message):
+        if message.content.lower() in ["hi", "hello", "hey"]:
+            await cl.Message(content="Hi! I am your Medical Assistant. Ask me anything!").send()
+        return
     rag_chain = cl.user_session.get("rag_chain")
     
     response = rag_chain.invoke({"input": message.content})
