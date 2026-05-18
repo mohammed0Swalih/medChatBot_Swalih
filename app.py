@@ -5,7 +5,7 @@ import chainlit as cl
 import whisper
 import numpy as np
 import base64
-import httpx
+import httpx #converts py dict to json
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -53,16 +53,17 @@ def get_page_image_and_caption(page_num):
 async def analyze_image(image_path: str) -> str:
     with open(image_path, "rb") as f:
         image_data = base64.b64encode(f.read()).decode("utf-8")
-    
+
+    #calling openrouter with httpx (vision model)
     async with httpx.AsyncClient() as client:
-        response = await client.post(               #calling openrouter with httpx (vision model)
+        response = await client.post(    #POST API req to openrouter        
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json"
             },
             json={
-                "model": "google/gemma-4-31b-it:free",
+                "model": "google/gemma-4-26b-a4b-it:free",
                 "messages": [
                     {
                         "role": "user",
@@ -280,7 +281,7 @@ async def main(message: cl.Message):
                 await cl.Message(content=final_answer, elements=elements, actions=actions).send()
                 return
 
-    # normal text flow
+    # normal response
     response = await cl.make_async(rag_chain.invoke)({"input": message.content})
 
     answer = response["answer"]
@@ -292,11 +293,11 @@ async def main(message: cl.Message):
         if page is not None and page not in pages:
             pages.append(page)
 
-    pages_text = ", ".join([f"Page {p + 1}" for p in pages])
+    pages_text = ", ".join([f"Page {p}" for p in pages])
     final_answer = f"{answer}\n\n---\n**Source:** Gale Encyclopedia of Medicine, 2nd Edition Vol.1\n📖 {pages_text}"
 
     elements = []
-    for page_num in pages:
+    for page_num in pages: #loops through each page ss
         img_path, caption = get_page_image_and_caption(int(page_num))
         if img_path:
             elements.append(cl.Image(path=img_path, name=f"page_{page_num}", display="inline"))
